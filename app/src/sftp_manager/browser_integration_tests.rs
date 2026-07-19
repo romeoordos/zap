@@ -116,10 +116,10 @@ fn test_connected_state_with_mock_backend() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.connection, ConnectionState::Connected),
-                "应处于 Connected 状态"
+                "Should be in Connected state"
             );
-            assert_eq!(v.entries.len(), 2, "应列出 2 个文件");
-            assert!(v.current_path == PathBuf::from("/"), "当前路径应为 /");
+            assert_eq!(v.entries.len(), 2, "Should list 2 files");
+            assert!(v.current_path == PathBuf::from("/"), "Current path should be /");
         });
     });
 }
@@ -135,9 +135,9 @@ fn test_connection_failure_shows_error_state() {
             // new() 内部调用 connect_to_server，无 SSH 配置时会进入 Failed 状态
             assert!(
                 !matches!(v.connection, ConnectionState::Connected),
-                "无 SSH 配置时不应为 Connected 状态"
+                "Should not be Connected without SSH configuration"
             );
-            assert!(v.entries.is_empty(), "未连接状态无条目");
+            assert!(v.entries.is_empty(), "No entries when not connected");
         });
     });
 }
@@ -160,7 +160,7 @@ fn test_reconnect_after_failure() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.connection, ConnectionState::Failed(_)),
-                "应为 Failed 状态"
+                "Should be Failed state"
             );
         });
 
@@ -175,9 +175,9 @@ fn test_reconnect_after_failure() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.connection, ConnectionState::Connected),
-                "重新注入后应为 Connected"
+                "Should be Connected after re-injection"
             );
-            assert_eq!(v.entries.len(), 1, "应列出新后端的 1 个文件");
+            assert_eq!(v.entries.len(), 1, "Should list 1 file from new backend");
         });
     });
 }
@@ -205,9 +205,9 @@ fn test_disconnect_clears_entries_and_path() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.connection, ConnectionState::Disconnected),
-                "断开后应为 Disconnected"
+                "Should be Disconnected after disconnect"
             );
-            assert!(v.entries.is_empty(), "条目应被清空");
+            assert!(v.entries.is_empty(), "Entries should be cleared");
         });
     });
 }
@@ -262,13 +262,13 @@ fn test_list_dir_populates_entries() {
         ]);
 
         view.read(&app, |v, _| {
-            assert_eq!(v.entries.len(), 5, "应有 5 个条目");
+            assert_eq!(v.entries.len(), 5, "Should have 5 entries");
 
             // 目录应排在文件前面
             let dirs: Vec<_> = v.entries.iter().take_while(|e| e.file_type == FileEntryType::Directory).collect();
             let files: Vec<_> = v.entries.iter().skip_while(|e| e.file_type == FileEntryType::Directory).collect();
-            assert_eq!(dirs.len(), 2, "应有 2 个目录");
-            assert_eq!(files.len(), 3, "应有 3 个文件");
+            assert_eq!(dirs.len(), 2, "Should have 2 directories");
+            assert_eq!(files.len(), 3, "Should have 3 files");
         });
     });
 }
@@ -296,9 +296,9 @@ fn test_open_directory_navigates_and_updates_history() {
         view.read(&app, |v, _| {
             assert!(
                 v.current_path.ends_with("docs") || v.current_path.to_string_lossy().contains("docs"),
-                "当前路径应包含 docs"
+                "Current path should contain docs"
             );
-            assert!(v.path_history.len() >= 2, "历史记录应增加");
+            assert!(v.path_history.len() >= 2, "History should have increased");
         });
     });
 }
@@ -328,7 +328,7 @@ fn test_go_up_from_subdirectory() {
         view.read(&app, |v, _| {
             assert!(
                 v.current_path == PathBuf::from("/") || v.entries.iter().any(|e| e.name == "subdir"),
-                "GoUp 应返回上级目录"
+                "GoUp should return to parent directory"
             );
         });
     });
@@ -361,7 +361,7 @@ fn test_go_back_forward_restores_path() {
             v.handle_action(&SftpBrowserAction::GoBack, ctx);
         });
         view.read(&app, |v, _| {
-            assert_eq!(v.current_path, root_path, "GoBack 应返回根路径");
+            assert_eq!(v.current_path, root_path, "GoBack should return to root");
         });
 
         // GoForward
@@ -369,7 +369,7 @@ fn test_go_back_forward_restores_path() {
             v.handle_action(&SftpBrowserAction::GoForward, ctx);
         });
         view.read(&app, |v, _| {
-            assert_eq!(v.current_path, alpha_path, "GoForward 应回到 alpha");
+            assert_eq!(v.current_path, alpha_path, "GoForward should return to alpha");
         });
     });
 }
@@ -401,7 +401,7 @@ fn test_breadcrumb_click_navigates_to_segment() {
         let current = view.read(&app, |v, _| v.current_path.clone());
         assert!(
             current.to_string_lossy().contains("level1"),
-            "应导航到 level1 下"
+            "Should navigate under level1"
         );
 
         // 导航回根（通过 NavigateTo）
@@ -416,7 +416,7 @@ fn test_breadcrumb_click_navigates_to_segment() {
         view.read(&app, |v, _| {
             assert!(
                 v.current_path.to_string_lossy().contains("level1"),
-                "面包屑跳转后应在 level1"
+                "After breadcrumb jump should be in level1"
             );
         });
     });
@@ -442,7 +442,7 @@ fn test_search_filter_narrows_visible_entries() {
             let visible: Vec<_> = v.entries.iter()
                 .filter(|e| e.name.contains(".txt"))
                 .collect();
-            assert_eq!(visible.len(), 1, "只有 readme.txt 匹配");
+            assert_eq!(visible.len(), 1, "Only readme.txt should match");
         });
     });
 }
@@ -471,7 +471,7 @@ fn test_clear_search_restores_all_entries() {
 
         view.read(&app, |v, _| {
             assert!(v.search_filter.is_none());
-            assert_eq!(v.entries.len(), total, "清除搜索后条目数应恢复");
+            assert_eq!(v.entries.len(), total, "Entry count should restore after clearing search");
         });
     });
 }
@@ -492,7 +492,7 @@ fn test_refresh_dir_reloads_entries() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.entries.len(), 1, "初始 1 个文件");
+            assert_eq!(v.entries.len(), 1, "Initially 1 file");
         });
 
         // 向临时目录添加新文件
@@ -504,7 +504,7 @@ fn test_refresh_dir_reloads_entries() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.entries.len(), 2, "刷新后应有 2 个文件");
+            assert_eq!(v.entries.len(), 2, "Should have 2 files after refresh");
         });
     });
 }
@@ -528,7 +528,7 @@ fn test_navigate_to_same_path_is_noop() {
         view.read(&app, |v, _| {
             assert_eq!(
                 v.path_history.len(), history_len,
-                "导航到当前路径不应增加历史"
+                "Navigate to same path should not add history"
             );
         });
     });
@@ -556,7 +556,7 @@ fn test_navigate_normalizes_backslashes() {
             let path_str = v.current_path.to_string_lossy();
             assert!(
                 path_str.contains("target"),
-                "导航后路径应包含 target"
+                "Path should contain target after navigation"
             );
         });
     });
@@ -581,11 +581,11 @@ fn test_select_entry_highlights_item() {
         view.read(&app, |v, _| {
             assert!(
                 v.selected.contains(&1),
-                "SelectEntry(1) 应选中第二个条目"
+                "SelectEntry(1) should select second item"
             );
             assert_eq!(
                 v.selected.len(), 1,
-                "应只有 1 个选中"
+                "Should have only 1 selected"
             );
         });
 
@@ -597,7 +597,7 @@ fn test_select_entry_highlights_item() {
         view.read(&app, |v, _| {
             assert!(
                 v.selected.contains(&2),
-                "SelectEntry(2) 应选中第三个条目"
+                "SelectEntry(2) should select third item"
             );
         });
     });
@@ -621,7 +621,7 @@ fn test_select_entry_out_of_bounds_safe() {
             // 实现不校验边界，索引 99 会被插入 selected
             assert!(
                 v.selected.contains(&99),
-                "当前实现将越界索引也插入 selected"
+                "Current impl also inserts out-of-bounds index"
             );
         });
     });
@@ -661,7 +661,7 @@ fn test_download_entry_action_without_connection_safe() {
         view.read(&app, |v, _| {
             assert!(
                 v.transfers.is_empty(),
-                "未连接时下载不应创建传输任务"
+                "Download should not create transfer when not connected"
             );
         });
     });
@@ -726,8 +726,8 @@ fn test_delete_file_confirmed_removes_entry() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "对话框应关闭");
-            assert_eq!(v.entries.len(), 1, "删除后应剩 1 个条目");
+            assert!(v.dialog.is_none(), "Dialog should be closed");
+            assert_eq!(v.entries.len(), 1, "Should have 1 entry left after delete");
             assert!(v.entries[0].name == "keep.txt");
         });
     });
@@ -755,7 +755,7 @@ fn test_delete_directory_confirmed_removes_recursively() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.entries.len(), 1, "删除目录后应剩 1 个条目");
+            assert_eq!(v.entries.len(), 1, "Should have 1 entry left after deleting directory");
             assert!(v.entries[0].name == "outer.txt");
         });
     });
@@ -792,10 +792,10 @@ fn test_rename_entry_updates_name() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed");
             assert!(
                 v.entries.iter().any(|e| e.name == "new_name.txt"),
-                "应出现新名称"
+                "New name should appear"
             );
         });
     });
@@ -832,7 +832,7 @@ fn test_rename_empty_name_shows_error() {
         view.read(&app, |v, _| {
             assert!(
                 v.dialog.is_some(),
-                "空名称时对话框应保持打开"
+                "Dialog should stay open with empty name"
             );
         });
     });
@@ -873,17 +873,17 @@ fn test_new_folder_creates_entry() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed");
             assert!(
                 v.entries.iter().any(|e| e.name == "test_folder" && e.file_type == FileEntryType::Directory),
-                "应出现新建的文件夹"
+                "New folder should appear"
             );
         });
 
         // 文件系统验证
         assert!(
             temp.path().join("test_folder").is_dir(),
-            "临时目录中应存在新建的文件夹"
+            "New folder should exist in temp directory"
         );
     });
 }
@@ -912,7 +912,7 @@ fn test_new_folder_empty_name_shows_error() {
         view.read(&app, |v, _| {
             assert!(
                 v.dialog.is_some(),
-                "空名称时对话框应保持打开"
+                "Dialog should stay open with empty name"
             );
         });
     });
@@ -941,7 +941,7 @@ fn test_file_details_dialog_shows_metadata() {
                     assert_eq!(entry.name, "details.txt");
                     assert_eq!(entry.file_type, FileEntryType::File);
                 }
-                _ => panic!("应打开 FileDetails 对话框"),
+                _ => panic!("Should open FileDetails dialog"),
             }
         });
     });
@@ -971,7 +971,7 @@ fn test_delete_cancel_preserves_entry() {
 
         view.read(&app, |v, _| {
             assert!(v.dialog.is_none());
-            assert_eq!(v.entries.len(), 1, "取消后条目应保留");
+            assert_eq!(v.entries.len(), 1, "Entries should be preserved after cancel");
         });
     });
 }
@@ -997,8 +997,8 @@ fn test_right_click_opens_menu_and_selects_entry() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.context_menu.is_some(), "右键菜单应打开");
-            assert!(v.selected.contains(&0), "应选中第一个条目");
+            assert!(v.context_menu.is_some(), "Context menu should open");
+            assert!(v.selected.contains(&0), "First entry should be selected");
         });
     });
 }
@@ -1028,7 +1028,7 @@ fn test_context_menu_delete_item_triggers_delete() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.dialog, Some(Dialog::DeleteConfirm { .. })),
-                "应打开删除确认对话框"
+                "Should open delete confirmation dialog"
             );
         });
     });
@@ -1057,7 +1057,7 @@ fn test_context_menu_rename_item_triggers_rename() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.dialog, Some(Dialog::Rename { .. })),
-                "应打开重命名对话框"
+                "Should open rename dialog"
             );
         });
     });
@@ -1086,7 +1086,7 @@ fn test_context_menu_details_item_triggers_details() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.dialog, Some(Dialog::FileDetails { .. })),
-                "应打开文件详情对话框"
+                "Should open file details dialog"
             );
         });
     });
@@ -1117,7 +1117,7 @@ fn test_dismiss_click_closes_menu() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.context_menu.is_none(), "菜单应关闭");
+            assert!(v.context_menu.is_none(), "Menu should be closed");
         });
     });
 }
@@ -1151,9 +1151,9 @@ fn test_delete_confirm_dialog_multiple_paths() {
         view.read(&app, |v, _| {
             match &v.dialog {
                 Some(Dialog::DeleteConfirm { paths, .. }) => {
-                    assert_eq!(paths.len(), 2, "应显示 2 个待删除路径");
+                    assert_eq!(paths.len(), 2, "Should show 2 paths to delete");
                 }
-                _ => panic!("应打开删除确认对话框"),
+                _ => panic!("Should open delete confirmation dialog"),
             }
         });
     });
@@ -1188,7 +1188,7 @@ fn test_rename_editor_enter_confirms() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "回车后对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed after Enter");
         });
     });
 }
@@ -1220,11 +1220,11 @@ fn test_rename_editor_escape_cancels() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "Escape 后对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed after Escape");
             // 文件名不应改变
             assert!(
                 v.entries.iter().any(|e| e.name == "rename_esc.txt"),
-                "原文件名应保持不变"
+                "Original filename should remain unchanged"
             );
         });
     });
@@ -1252,10 +1252,10 @@ fn test_new_folder_editor_enter_confirms() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "回车后对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed after Enter");
             assert!(
                 v.entries.iter().any(|e| e.name == "my_folder"),
-                "应创建 my_folder"
+                "Should create my_folder"
             );
         });
     });
@@ -1286,7 +1286,7 @@ fn test_overwrite_confirm_dialog() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "覆盖确认后对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed after overwrite confirmation");
         });
     });
 }
@@ -1321,7 +1321,7 @@ fn test_move_confirm_dialog() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "移动确认后对话框应关闭");
+            assert!(v.dialog.is_none(), "Dialog should be closed after move confirmation");
         });
     });
 }
@@ -1356,12 +1356,12 @@ fn test_upload_creates_transfer_task() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.transfers.len(), 1, "应创建 1 个传输任务");
+            assert_eq!(v.transfers.len(), 1, "Should create 1 transfer task");
             let task = &v.transfers[0];
             assert_eq!(task.direction, TransferDirection::Upload);
             assert!(
                 matches!(task.state, TransferState::Completed | TransferState::InProgress | TransferState::Failed(_)),
-                "传输任务应有明确状态"
+                "Transfer task should have clear state"
             );
         });
     });
@@ -1385,7 +1385,7 @@ fn test_upload_nonexistent_file_fails() {
             assert_eq!(v.transfers.len(), 1);
             assert!(
                 matches!(v.transfers[0].state, TransferState::Failed(_)),
-                "上传不存在的文件应失败"
+                "Uploading non-existent file should fail"
             );
         });
     });
@@ -1423,7 +1423,7 @@ fn test_download_creates_transfer_task() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.transfers.len(), 1, "应创建下载任务");
+            assert_eq!(v.transfers.len(), 1, "Should create download task");
             assert_eq!(v.transfers[0].direction, TransferDirection::Download);
         });
     });
@@ -1456,7 +1456,7 @@ fn test_cancel_transfer_sets_cancelled_flag() {
 
         view.read(&app, |v, _| {
             let task = v.transfers.iter().find(|t| t.id == 42).unwrap();
-            assert!(task.is_cancelled(), "任务应被标记为已取消");
+            assert!(task.is_cancelled(), "Task should be marked as cancelled");
         });
     });
 }
@@ -1506,7 +1506,7 @@ fn test_drag_enter_shows_overlay() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.is_drag_hovering, "拖入后应显示覆盖层");
+            assert!(v.is_drag_hovering, "Overlay should show after drag enter");
         });
     });
 }
@@ -1528,7 +1528,7 @@ fn test_drag_leave_hides_overlay() {
         });
 
         view.read(&app, |v, _| {
-            assert!(!v.is_drag_hovering, "拖出后应隐藏覆盖层");
+            assert!(!v.is_drag_hovering, "Overlay should hide after drag leave");
         });
     });
 }
@@ -1559,8 +1559,8 @@ fn test_drop_files_creates_upload_tasks() {
         });
 
         view.read(&app, |v, _| {
-            assert_eq!(v.transfers.len(), 1, "拖放应创建上传任务");
-            assert!(!v.is_drag_hovering, "拖放后应清除悬停状态");
+            assert_eq!(v.transfers.len(), 1, "Drag and drop should create upload task");
+            assert!(!v.is_drag_hovering, "Hover state should be cleared after drop");
         });
     });
 }
@@ -1577,7 +1577,7 @@ fn test_drop_empty_paths_ignored() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.transfers.is_empty(), "空路径不应创建任务");
+            assert!(v.transfers.is_empty(), "Empty paths should not create tasks");
         });
     });
 }
@@ -1611,7 +1611,7 @@ fn test_keyboard_navigate_up() {
         view.read(&app, |v, _| {
             assert!(
                 v.entries.iter().any(|e| e.name == "subdir"),
-                "NavigateUp 后应回到上级并看到 subdir"
+                "After NavigateUp should return to parent and see subdir"
             );
         });
     });
@@ -1640,7 +1640,7 @@ fn test_keyboard_delete_selected() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.dialog, Some(Dialog::DeleteConfirm { .. })),
-                "DeleteSelected 应触发删除确认"
+                "DeleteSelected should trigger delete confirmation"
             );
         });
     });
@@ -1660,7 +1660,7 @@ fn test_keyboard_create_folder() {
         view.read(&app, |v, _| {
             assert!(
                 matches!(v.dialog, Some(Dialog::CreateFolder { .. })),
-                "CreateFolder 应打开新建文件夹对话框"
+                "CreateFolder should open new folder dialog"
             );
         });
     });
@@ -1688,9 +1688,9 @@ fn test_keyboard_shortcuts_without_selection() {
         view.read(&app, |v, _| {
             assert!(
                 v.dialog.is_none(),
-                "无选中时 DeleteSelected 不应打开对话框"
+                "DeleteSelected should not open dialog without selection"
             );
-            assert_eq!(v.entries.len(), 1, "条目不应被删除");
+            assert_eq!(v.entries.len(), 1, "Entries should not be deleted");
         });
     });
 }
@@ -1723,7 +1723,7 @@ fn test_keyboard_escape_closes_dialog() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.dialog.is_none(), "Escape 应关闭对话框");
+            assert!(v.dialog.is_none(), "Escape should close dialog");
         });
     });
 }
@@ -1784,7 +1784,7 @@ fn test_render_loading_state() {
         });
 
         view.read(&app, |v, _| {
-            assert!(v.is_loading, "应处于加载状态");
+            assert!(v.is_loading, "Should be in loading state");
         });
 
         // 取消加载
@@ -1794,7 +1794,7 @@ fn test_render_loading_state() {
         });
 
         view.read(&app, |v, _| {
-            assert!(!v.is_loading, "应取消加载状态");
+            assert!(!v.is_loading, "Should cancel loading state");
         });
     });
 }
@@ -1808,7 +1808,7 @@ fn test_render_empty_directory() {
 
         view.read(&app, |v, _| {
             assert!(matches!(v.connection, ConnectionState::Connected));
-            assert!(v.entries.is_empty(), "空目录应无条目");
+            assert!(v.entries.is_empty(), "Empty directory should have no entries");
         });
     });
 }

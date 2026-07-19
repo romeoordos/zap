@@ -155,8 +155,8 @@ pub mod prompt_suggestions {
             Language::English => "English",
             Language::SimplifiedChinese => "Simplified Chinese",
             Language::Japanese => "Japanese",
-            // Language::System follows the OS locale; resolve via the active i18n loader
-            // so Chinese/Japanese system-locale users still get CJK suggestions.
+            Language::Russian => "Russian",
+            Language::Ukrainian => "Ukrainian",
             Language::System => {
                 let locale = crate::i18n::current_languages()
                     .into_iter()
@@ -167,6 +167,10 @@ pub mod prompt_suggestions {
                     "Simplified Chinese"
                 } else if locale.starts_with("ja") {
                     "Japanese"
+                } else if locale.starts_with("ru") {
+                    "Russian"
+                } else if locale.starts_with("uk") {
+                    "Ukrainian"
                 } else {
                     "English"
                 }

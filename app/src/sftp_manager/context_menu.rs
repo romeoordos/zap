@@ -46,23 +46,23 @@ struct MenuItem {
 fn build_file_menu_items(entry_index: usize) -> Vec<MenuItem> {
     vec![
         MenuItem {
-            label: String::from("打开"),
+            label: String::from("Open"),
             action: SftpBrowserAction::OpenEntry(entry_index),
         },
         MenuItem {
-            label: String::from("下载"),
+            label: String::from("Download"),
             action: SftpBrowserAction::DownloadEntry(entry_index),
         },
         MenuItem {
-            label: String::from("重命名"),
+            label: String::from("Rename"),
             action: SftpBrowserAction::RenameEntry(entry_index),
         },
         MenuItem {
-            label: String::from("删除"),
+            label: String::from("Delete"),
             action: SftpBrowserAction::DeleteEntry(entry_index),
         },
         MenuItem {
-            label: String::from("详细信息"),
+            label: String::from("Details"),
             action: SftpBrowserAction::DetailsEntry(entry_index),
         },
     ]
@@ -231,16 +231,16 @@ mod tests {
     #[test]
     fn test_build_file_menu_items_count() {
         let items = build_file_menu_items(0);
-        assert_eq!(items.len(), 5, "应有 5 个菜单项");
+        assert_eq!(items.len(), 5, "Should have 5 menu items");
     }
 
     /// 测试菜单项标签正确
     #[test]
     fn test_build_file_menu_items_labels() {
         let items = build_file_menu_items(0);
-        let expected_labels = ["打开", "下载", "重命名", "删除", "详细信息"];
+        let expected_labels = ["Open", "Download", "Rename", "Delete", "Details"];
         for (item, expected) in items.iter().zip(expected_labels.iter()) {
-            assert_eq!(&item.label.as_str(), expected, "标签应为 {}", expected);
+            assert_eq!(&item.label.as_str(), expected, "Label should be {expected}");
         }
     }
 
@@ -304,7 +304,7 @@ mod tests {
 
             // 渲染不应 panic（视图会自动重新渲染）
             view.read(&app, |view, _| {
-                assert!(view.context_menu.is_some(), "菜单应已打开");
+                assert!(view.context_menu.is_some(), "Menu should be open");
             });
         });
     }

@@ -32,26 +32,26 @@ fn parameters() -> Value {
         "properties": {
             "command": {
                 "type": "string",
-                "description": "要执行的 shell 命令(完整命令行)。"
+                "description": "The shell command to execute (full command line)."
             },
             "is_read_only": {
                 "type": "boolean",
-                "description": "命令是否仅读取信息、不修改文件系统/外部状态(true 时无需用户确认)。",
+                "description": "Whether the command only reads information without modifying the filesystem or external state (true means no user confirmation needed).",
                 "default": false
             },
             "uses_pager": {
                 "type": "boolean",
-                "description": "命令是否会触发 pager(less/more 等)。建议 false,可附加 | cat 之类避免阻塞。",
+                "description": "Whether the command may trigger a pager (less, more, etc.). Recommend false; append | cat or similar to avoid blocking.",
                 "default": false
             },
             "is_risky": {
                 "type": "boolean",
-                "description": "命令是否危险(rm -rf、改全局配置等)。设为 true 让用户更醒目地确认。",
+                "description": "Whether the command is dangerous (rm -rf, global config changes, etc.). Set true to give the user a more prominent confirmation.",
                 "default": false
             },
             "wait_until_complete": {
                 "type": "boolean",
-                "description": "默认 true(等命令结束才返回,适合一次性命令)。dev server / 后台进程 / tail -f / 交互 REPL 这类不会自然退出的命令必须设为 false,否则当前 turn 会卡死永远等不到结果。设 false 后会立刻返回 LongRunningCommandSnapshot,后续 turn 用 read/write_to_long_running_shell_command 继续交互。",
+                "description": "Default true (wait for command completion, for one-shot commands). Must be false for dev servers / background processes / tail -f / interactive REPLs that never exit naturally — otherwise the current turn hangs forever. When false, immediately returns a LongRunningCommandSnapshot; use read/write_to_long_running_shell_command in subsequent turns.",
                 "default": true
             }
         },

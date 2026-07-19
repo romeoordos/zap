@@ -61,7 +61,7 @@ fn test_drag_files_enter() {
         view.read(&app, |view, _| {
             assert!(
                 view.is_drag_hovering,
-                "DragFilesEnter 后 is_drag_hovering 应为 true"
+                "is_drag_hovering should be true after DragFilesEnter"
             );
         });
     });
@@ -86,7 +86,7 @@ fn test_drag_files_leave() {
         view.read(&app, |view, _| {
             assert!(
                 !view.is_drag_hovering,
-                "DragFilesLeave 后 is_drag_hovering 应为 false"
+                "is_drag_hovering should be false after DragFilesLeave"
             );
         });
     });
@@ -114,7 +114,7 @@ fn test_drag_and_drop_resets_hover() {
         view.read(&app, |view, _| {
             assert!(
                 !view.is_drag_hovering,
-                "DragAndDropFiles 后 is_drag_hovering 应重置为 false"
+                "is_drag_hovering should reset to false after DragAndDropFiles"
             );
         });
     });
@@ -136,7 +136,7 @@ fn test_select_entry() {
         });
 
         view.read(&app, |view, _| {
-            assert!(view.selected.contains(&0), "SelectEntry(0) 后应选中索引 0");
+            assert!(view.selected.contains(&0), "Index 0 should be selected after SelectEntry(0)");
         });
     });
 }
@@ -161,8 +161,8 @@ fn test_toggle_select_entry() {
             view.handle_action(&SftpBrowserAction::SelectEntry(5), ctx);
         });
         view.read(&app, |view, _| {
-            assert!(!view.selected.contains(&2), "SelectEntry(5) 后应取消选中 2");
-            assert!(view.selected.contains(&5), "SelectEntry(5) 后应选中 5");
+            assert!(!view.selected.contains(&2), "Index 2 should be deselected after SelectEntry(5)");
+            assert!(view.selected.contains(&5), "Index 5 should be selected after SelectEntry(5)");
         });
     });
 }
@@ -207,7 +207,7 @@ fn test_clear_search_filter() {
         view.read(&app, |view, _| {
             assert!(
                 view.search_filter.is_none(),
-                "ClearSearchFilter 后应为 None"
+                "Should be None after ClearSearchFilter"
             );
         });
     });
@@ -236,7 +236,7 @@ fn test_navigate_up_from_root() {
             assert_eq!(
                 view.current_path,
                 PathBuf::from("/"),
-                "根目录 NavigateUp 应保持不变"
+                "NavigateUp on root directory should stay unchanged"
             );
         });
     });
@@ -254,11 +254,11 @@ fn test_initial_state() {
         let (_, view) = create_view(&mut app);
 
         view.read(&app, |view, _| {
-            assert!(view.entries.is_empty(), "初始条目列表应为空");
-            assert!(view.selected.is_empty(), "初始选中集合应为空");
-            assert!(view.transfers.is_empty(), "初始传输列表应为空");
-            assert!(view.search_filter.is_none(), "初始搜索过滤应为 None");
-            assert!(!view.is_drag_hovering, "初始拖拽悬停应为 false");
+            assert!(view.entries.is_empty(), "Initial entries list should be empty");
+            assert!(view.selected.is_empty(), "Initial selected set should be empty");
+            assert!(view.transfers.is_empty(), "Initial transfers list should be empty");
+            assert!(view.search_filter.is_none(), "Initial search filter should be None");
+            assert!(!view.is_drag_hovering, "Initial drag hovering should be false");
         });
     });
 }
@@ -290,14 +290,14 @@ fn test_context_menu_sets_state() {
         view.read(&app, |view, _| {
             assert!(
                 view.context_menu.is_some(),
-                "ContextMenu 后 context_menu 应为 Some"
+                "context_menu should be Some after ContextMenu"
             );
             let cm = view.context_menu.as_ref().unwrap();
-            assert_eq!(cm.entry_index, 3, "entry_index 应为 3");
-            assert_eq!(cm.position, position, "position 应与传入值一致");
+            assert_eq!(cm.entry_index, 3, "entry_index should be 3");
+            assert_eq!(cm.position, position, "position should match the input");
             assert!(
                 view.selected.contains(&3),
-                "ContextMenu 后应选中索引 3"
+                "Index 3 should be selected after ContextMenu"
             );
         });
     });
@@ -323,7 +323,7 @@ fn test_close_context_menu_clears_state() {
             );
         });
         view.read(&app, |view, _| {
-            assert!(view.context_menu.is_some(), "应已打开菜单");
+            assert!(view.context_menu.is_some(), "Menu should be open");
         });
 
         // 关闭菜单
@@ -334,7 +334,7 @@ fn test_close_context_menu_clears_state() {
         view.read(&app, |view, _| {
             assert!(
                 view.context_menu.is_none(),
-                "CloseContextMenu 后 context_menu 应为 None"
+                "context_menu should be None after CloseContextMenu"
             );
         });
     });
@@ -374,18 +374,18 @@ fn test_context_menu_replaces_previous() {
 
         view.read(&app, |view, _| {
             let cm = view.context_menu.as_ref().unwrap();
-            assert_eq!(cm.entry_index, 5, "应更新为新的 entry_index");
+            assert_eq!(cm.entry_index, 5, "Should update to new entry_index");
             assert_eq!(
                 cm.position, new_position,
-                "应更新为新的 position"
+                "Should update to new position"
             );
             assert!(
                 view.selected.contains(&5),
-                "应选中新索引 5"
+                "New index 5 should be selected"
             );
             assert!(
                 !view.selected.contains(&0),
-                "应取消选中旧索引 0"
+                "Old index 0 should be deselected"
             );
         });
     });
@@ -417,9 +417,9 @@ fn test_context_menu_zero_index() {
 
         view.read(&app, |view, _| {
             let cm = view.context_menu.as_ref().unwrap();
-            assert_eq!(cm.entry_index, 0, "index=0 应正确保存");
-            assert_eq!(cm.position, position, "position 应正确保存");
-            assert!(view.selected.contains(&0), "应选中索引 0");
+            assert_eq!(cm.entry_index, 0, "index=0 should be saved correctly");
+            assert_eq!(cm.position, position, "position should be saved correctly");
+            assert!(view.selected.contains(&0), "Index 0 should be selected");
         });
     });
 }
@@ -446,8 +446,8 @@ fn test_context_menu_large_index() {
 
         view.read(&app, |view, _| {
             let cm = view.context_menu.as_ref().unwrap();
-            assert_eq!(cm.entry_index, 999, "大索引应正确保存");
-            assert!(view.selected.contains(&999), "应选中大索引");
+            assert_eq!(cm.entry_index, 999, "Large index should be saved correctly");
+            assert!(view.selected.contains(&999), "Large index should be selected");
         });
     });
 }
@@ -474,7 +474,7 @@ fn test_context_menu_negative_position() {
 
         view.read(&app, |view, _| {
             let cm = view.context_menu.as_ref().unwrap();
-            assert_eq!(cm.position, position, "负坐标应正确保存");
+            assert_eq!(cm.position, position, "Negative coordinate should be saved correctly");
         });
     });
 }
@@ -488,7 +488,7 @@ fn test_close_context_menu_when_none() {
 
         // 初始状态没有菜单
         view.read(&app, |view, _| {
-            assert!(view.context_menu.is_none(), "初始应无菜单");
+            assert!(view.context_menu.is_none(), "Initially should have no menu");
         });
 
         // 直接关闭不应 panic
@@ -499,7 +499,7 @@ fn test_close_context_menu_when_none() {
         view.read(&app, |view, _| {
             assert!(
                 view.context_menu.is_none(),
-                "关闭后仍应为 None"
+                "Should remain None after close"
             );
         });
     });
@@ -522,8 +522,8 @@ fn test_context_menu_clears_previous_selection() {
             view.handle_action(&SftpBrowserAction::SelectEntry(3), ctx);
         });
         view.read(&app, |view, _| {
-            assert!(view.selected.contains(&3), "应选中 3");
-            assert!(!view.selected.contains(&2), "单选模式应清除 2");
+            assert!(view.selected.contains(&3), "Should select 3");
+            assert!(!view.selected.contains(&2), "Single-select mode should clear 2");
         });
 
         // 右键点击条目 7
@@ -538,9 +538,9 @@ fn test_context_menu_clears_previous_selection() {
         });
 
         view.read(&app, |view, _| {
-            assert!(view.selected.contains(&7), "应选中 7");
-            assert!(!view.selected.contains(&3), "应清除旧选择 3");
-            assert_eq!(view.selected.len(), 1, "应只有一个选中项");
+            assert!(view.selected.contains(&7), "Should select 7");
+            assert!(!view.selected.contains(&3), "Should clear old selection 3");
+            assert_eq!(view.selected.len(), 1, "Should have only one selected item");
         });
     });
 }
@@ -566,7 +566,7 @@ fn test_context_menu_multiple_open_close_cycles() {
                 );
             });
             view.read(&app, |view, _| {
-                assert!(view.context_menu.is_some(), "第 {i} 次打开应成功");
+                assert!(view.context_menu.is_some(), "Open #{i} should succeed");
             });
 
             // 关闭菜单
@@ -576,7 +576,7 @@ fn test_context_menu_multiple_open_close_cycles() {
             view.read(&app, |view, _| {
                 assert!(
                     view.context_menu.is_none(),
-                    "第 {i} 次关闭后应为 None"
+                    "Should be None after close #{i}"
                 );
             });
         }
