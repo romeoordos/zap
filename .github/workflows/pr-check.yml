@@ -1,0 +1,137 @@
+# PR 校验流水线 — Linux 上的编译 + lint + 受影响 crate 的单元测试
+#
+# 与 zap_release.yml 的分工:
+# - 本 workflow:每个 PR 跑 fmt / clang-format / check / clippy,
+#   以及改动 crate 的 nextest 单元测试
+# - zap_release.yml:仅 push tag / 手动 dispatch 时跑三平台全量打包(~3h)
+#
+# 只跑 Linux — Windows/macOS 的差异主要在 bundle 阶段而非 cargo 编译,
+# 跨平台编译问题留给 release tag 兜底。
+#
+# shell / SSH 集成测试(需要 xvfb、gcloud、多种 shell)不在 PR 门禁内。
+
+name: PR Check
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-check-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  CARGO_TERM_COLOR: always
+  # 跟 zap_release.yml 保持一致 — oss channel 才能编译时不依赖
+  # warp-channel-config 私有仓库。
+  CHANNEL: oss
+
+jobs:
+  linux:
+    name: Linux (fmt / lint / check / tests)
+    # 与 zap_release.yml 的 linux job 同 runner(glibc 2.35)。
+    runs-on: ubuntu-22.04
+    timeout-minutes: 120
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          # 需要完整历史来算 PR 改动涉及的 crate。
+          fetch-depth: 0
+
+      - uses: ./.github/actions/prepare_environment
+        with:
+          target_os: linux
+          is_self_hosted: false
+          install_release_deps: false
+
+      - name: Ensure rust toolchain
+        shell: bash
+        run: |
+          rustup show active-toolchain
+          rustup component add rustfmt clippy
+
+      # fmt / clang-format / clippy 目前是 advisory(continue-on-error):
+      # 分叉代码中还有大量存量格式与 warning 问题,先把它们清干净再改成硬门禁。
+      - name: cargo fmt
+        shell: bash
+        continue-on-error: true
+        run: cargo fmt --all -- --check
+
+      - name: clang-format
+        shell: bash
+        continue-on-error: true
+        run: ./script/run-clang-format.py -r --extensions 'c,h,cpp,m' ./crates/warpui/src/ ./app/src/
+
+      - name: cargo check (oss bin)
+        shell: bash
+        # `cargo check --workspace` 会拖入 wasm/preview 等 channel-gated target,
+        # 这里只 check 默认 oss bin + 它的依赖图,跟 release 编译目标一致。
+        run: cargo check --bin zap-oss --locked
+
+      # 不传 -D warnings:存量 warning 不阻断 PR,但 clippy 的硬错误会阻断。
+      - name: cargo clippy
+        shell: bash
+        run: |
+          cargo clippy --workspace --exclude warp_completer --all-targets --tests
+          cargo clippy -p warp_completer --all-targets --tests
+
+      - name: Determine changed packages
+        id: changed
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+          fi
+          if [[ -z "$BASE" || "$BASE" =~ ^0+$ ]]; then
+            echo "packages=" >> "$GITHUB_OUTPUT"
+            echo "::notice::No base commit for diff; skipping tests."
+            exit 0
+          fi
+          mapfile -t FILES < <(git diff --name-only --diff-filter=ACMRT "$BASE"...HEAD)
+          if (( ${#FILES[@]} == 0 )); then
+            echo "packages=" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          cargo metadata --no-deps --format-version 1 --locked \
+            | jq -r '.packages[] | "\(.name)\t\(.manifest_path)"' > /tmp/packages.tsv
+          declare -A CHANGED=()
+          for f in "${FILES[@]}"; do
+            best=""
+            best_len=0
+            while IFS=$'\t' read -r name manifest; do
+              dir="${manifest%/Cargo.toml}"
+              dir="${dir#"$PWD"/}"
+              if [[ "$f" == "$dir/"* ]] && (( ${#dir} > best_len )); then
+                best="$name"
+                best_len=${#dir}
+              fi
+            done < /tmp/packages.tsv
+            if [[ -n "$best" ]]; then
+              CHANGED["$best"]=1
+            fi
+          done
+          PKGS="${!CHANGED[*]}"
+          echo "packages=$PKGS" >> "$GITHUB_OUTPUT"
+          echo "Changed packages: ${PKGS:-<none>}"
+
+      - name: Unit tests for changed packages
+        if: steps.changed.outputs.packages != ''
+        shell: bash
+        # 只跑单元测试;集成测试需要真实 shell / SSH / 显示,留给本地或 release 兜底。
+        run: |
+          ./script/linux/install_runtime_deps
+          sudo apt-get install -y zsh fish vim
+          cargo binstall --secure --no-confirm --no-discover-github-token cargo-nextest
+          args=()
+          for p in ${{ steps.changed.outputs.packages }}; do
+            args+=(-p "$p")
+          done
+          cargo nextest run --no-fail-fast "${args[@]}" -E 'not package(integration)'
